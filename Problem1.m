@@ -52,11 +52,12 @@ W = find((Aw*x-b)<1e-14);
 tic
 [wbiter, lm] = ASM(x,grad_func,hessian_func,Aw,b,W);
 Ts(i) = toc;
+iters = size(wbiter,2);
 wb = wbiter(:,end);
 w = wb(1:dim+1);
 ws = [ws,w];
 if size(wbiter,2)<1001
-    fprintf('w = [%d,%d,%d], b = %d\n\n',w(1),w(2),w(3),w(4));
+    fprintf('converged on iteration %d, took time %d,  w = [%d,%d,%d], b = %d\n\n',iters,Ts(i),w(1),w(2),w(3),w(4));
     plot_plane(fhandle,XX,w,color_list(i));
 else
     fprintf("ASM didn't converge.\n\n")
@@ -120,9 +121,10 @@ t = toc;
 Ts2 = [Ts2, t];
 wb = wbiter(:,end);
 w = wb(1:dim+1);
+iters = size(wbiter,2);
 ws2 = [ws2,w];
 if size(wbiter,2)<1001
-    fprintf('w = [%d,%d,%d], b = %d\n\n',w(1),w(2),w(3),w(4));
+    fprintf('converged on iteration %d, took time %d,  w = [%d,%d,%d], b = %d\n\n',iters,t,w(1),w(2),w(3),w(4));
     plot_plane(fhandle2,XX,w,color_list(i));
 else
     fprintf("ASM didn't converge.\n\n")

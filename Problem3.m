@@ -104,10 +104,15 @@ for i = 1:length(bsz_list)
     end
 end
 
-save('P3_n.mat','results_n');
-save('P3_sg.mat','results_sg');
 
 %% plots
+fsz = 16;
+load('P3_n.mat');untitled
+load('P3_sg.mat');
+vec = 0:6;
+bsz_list = 8*2.^vec;
+stepsize_strategies = struct('line_search',[1]);
+lambdas = [0.01];
 % different g batch size
 bsz = bsz_list;
 lam = [0.01];
@@ -157,11 +162,11 @@ grid on
 pbaspect([1.3 1 1])
 
 % compare with sg
-bszs = [64];
+bsz = [64];
 lam = [0.01];
 stepsize = struct('line_search',[1]);
-results_plot_sg = results_sg(find_inds_sg(results_sg,bszg,lam,stepsize));
-results_plot_si = results_n(find_inds_si(results_n,bszg,lam,stepsize));
+results_plot_sg = results_sg(find_inds_sg(results_sg,bsz,lam,stepsize));
+results_plot_si = results_n(find_inds_si(results_n,bsz,lam,stepsize));
 figure;
 plot(1:1001,results_plot_sg(1).fs_ave,'LineWidth',2,'DisplayName','SG');
 hold on;
@@ -189,7 +194,7 @@ plot(1,sum(results_plot_sg(1).tss_ave),'bo','LineWidth',2,'DisplayName','SG');
 hold on;
 plot(2,sum(results_plot_si(1).tss_ave),'bo','LineWidth',2,'DisplayName','SINewton');
 xticks([1,2])
-xticklabels({'SLBFGS','SG','SINewton'})
+xticklabels({'SG','SINewton'})
 ylabel('runtime (s)','Fontsize',fsz)
 xlim([0,3])
 grid on
