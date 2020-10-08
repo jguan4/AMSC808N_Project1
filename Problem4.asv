@@ -17,10 +17,11 @@ w0 = [-1;-1;1;1];
 Y = (label*ones(1,dim + 1)).*[XX,ones(n,1)];
 
 vec = 0:2;
-bszg_list = 16*2.^vec;
-bszH_list = 64*2.^vec;
+bszg_list = 32*2.^vec;
+bszH_list = 128*2.^vec;
 M_list = [1,5,10];
 stepsize_strategies = struct('fixed',[0.5,0.1,0.01],'decay',[0.5,1,2],'line_search',[1]);
+
 lam = 0.01;
 fun = @(I,w)loss_fun(I,Y,w,lam);
 gfun = @(I,w)loss_gfun(I,Y,w,lam);
@@ -34,43 +35,49 @@ stepsize_names = fieldnames(stepsize_strategies);
 for i = 1:length(bszg_list)
     bszg = bszg_list(i);
     
-    fs_n = zeros(realizationN,1001);
-    gnorms_n = zeros(realizationN,1000);
-    tss_n = zeros(realizationN,1000);
-    for ri = 1:realizationN
-        [w_n,f_n,g_n,ts_n] = SINewton(fun,gfun,Hvec,n,w0,bszg);
-        fs_n(ri,:) = f_n';
-        gnorms_n(ri,:) = g_n';
-        tss_n(ri,:) = ts_n';
-    end
-    fs_ave_n = mean(fs_n,1);
-    fs_std_n = std(fs_n,1);
-    gnorms_ave_n = mean(gnorms_n,1);
-    gnorms_std_n = std(gnorms_n,1);
-    tss_ave_n = mean(tss_n,1);
-    tss_std_n = std(tss_n,1);
+%     fs_n = zeros(realizationN,1001);
+%     gnorms_n = zeros(realizationN,1000);
+%     tss_n = zeros(realizationN,1000);
+%     ws_n = zeros(realizationN,4);
+%     for ri = 1:realizationN
+%         [w_n,f_n,g_n,ts_n] = SINewton(fun,gfun,Hvec,n,w0,bszg);
+%         fs_n(ri,:) = f_n';
+%         gnorms_n(ri,:) = g_n';
+%         tss_n(ri,:) = ts_n';
+%         ws_n(ri,:) = w_n';
+%     end
+%     fs_ave_n = mean(fs_n,1);
+%     fs_std_n = std(fs_n,1);
+%     gnorms_ave_n = mean(gnorms_n,1);
+%     gnorms_std_n = std(gnorms_n,1);
+%     tss_ave_n = mean(tss_n,1);
+%     tss_std_n = std(tss_n,1);
+%     ws_ave_n = mean(ws_n,1);
     
     for z = 1:size(stepsize_names,1)
         stepsize_toggle = stepsize_names{z};
         stepsize_params = getfield(stepsize_strategies,stepsize_toggle);
         for zi = 1:length(stepsize_params)
             stepsize_param = stepsize_params(zi);
-            fs_sg = zeros(realizationN,1001);
-            gnorms_sg = zeros(realizationN,1000);
-            tss_sg = zeros(realizationN,1000);
             
-            for ri = 1:realizationN
-                [w,f,gnorm,ts] = SG(fun,gfun,w0,n,bszg,stepsize_toggle,stepsize_param);
-                fs_sg(ri,:) = f';
-                gnorms_sg(ri,:) = gnorm';
-                tss_sg(ri,:) = ts';
-            end
-            fs_ave_sg = mean(fs_sg,1);
-            fs_std_sg = std(fs_sg,1);
-            gnorms_ave_sg = mean(gnorms_sg,1);
-            gnorms_std_sg = std(gnorms_sg,1);
-            tss_ave_sg = mean(tss_sg,1);
-            tss_std_sg = std(tss_sg,1);
+%             fs_sg = zeros(realizationN,1001);
+%             gnorms_sg = zeros(realizationN,1000);
+%             tss_sg = zeros(realizationN,1000);
+%             ws_sg = zeros(realizationN,4);
+%             for ri = 1:realizationN
+%                 [w,f,gnorm,ts] = SG(fun,gfun,w0,n,bszg,stepsize_toggle,stepsize_param);
+%                 fs_sg(ri,:) = f';
+%                 gnorms_sg(ri,:) = gnorm';
+%                 tss_sg(ri,:) = ts';
+%                 ws_sg(ri,:) = w';
+%             end
+%             fs_ave_sg = mean(fs_sg,1);
+%             fs_std_sg = std(fs_sg,1);
+%             gnorms_ave_sg = mean(gnorms_sg,1);
+%             gnorms_std_sg = std(gnorms_sg,1);
+%             tss_ave_sg = mean(tss_sg,1);
+%             tss_std_sg = std(tss_sg,1);
+%             ws_ave_sg = mean(ws_sg,1);
             
             for iM = 1:length(M_list)
                 M = M_list(iM);
@@ -80,26 +87,14 @@ for i = 1:length(bszg_list)
                     fs_slbfgs = zeros(realizationN,1001);
                     gnorms_slbfgs = zeros(realizationN,1000);
                     tss_slbfgs = zeros(realizationN,1000);
+                    ws_slbfgs = zeros(realizationN,4);
                     for ri = 1:realizationN
-                        [w_slbfgs,f_slbfgs,gnorm_slbfgs,ts_slbfgs] =  SLBFGS(fun,gfun,Hvec,w,n,bszg,bszH,M,stepsize_toggle,stepsize_param);
-                        
+                        [w_slbfgs,f_slbfgs,gnorm_slbfgs,ts_slbfgs] =  SLBFGS(fun,gfun,Hvec,w0,n,bszg,bszH,M,stepsize_toggle,stepsize_param);
                         fs_slbfgs(ri,:) = f_slbfgs';
                         gnorms_slbfgs(ri,:) = gnorm_slbfgs;
                         tss_slbfgs(ri,:) = ts_slbfgs;
+                        ws_slbfgs(ri,:) = w_slbfgs';
                     end
-                    fs_ave_sg = mean(fs_sg,1);
-                    fs_std_sg = std(fs_sg,1);
-                    gnorms_ave_sg = mean(gnorms_sg,1);
-                    gnorms_std_sg = std(gnorms_sg,1);
-                    tss_ave_sg = mean(tss_sg,1);
-                    tss_std_sg = std(tss_sg,1);
-                    
-                    fs_ave_n = mean(fs_n,1);
-                    fs_std_n = std(fs_n,1);
-                    gnorms_ave_n = mean(gnorms_n,1);
-                    gnorms_std_n = std(gnorms_n,1);
-                    tss_ave_n = mean(tss_n,1);
-                    tss_std_n = std(tss_n,1);
                     
                     fs_ave_slbfgs = mean(fs_slbfgs,1);
                     fs_std_slbfgs = std(fs_slbfgs,1);
@@ -107,32 +102,35 @@ for i = 1:length(bszg_list)
                     gnorms_std_slbfgs = std(gnorms_slbfgs,1);
                     tss_ave_slbfgs = mean(tss_slbfgs,1);
                     tss_std_slbfgs = std(tss_slbfgs,1);
+                    ws_ave_slbfgs = mean(ws_slbfgs,1);
                     
-                    results_sg(counter).M = M;
-                    results_sg(counter).bszg = bszg;
-                    results_sg(counter).bszH = bszH;
-                    results_sg(counter).lam = lam;
-                    results_sg(counter).step = stepsize_toggle;
-                    results_sg(counter).step_param = stepsize_param;
-                    results_sg(counter).fs_ave = fs_ave_sg;
-                    results_sg(counter).fs_std = fs_std_sg;
-                    results_sg(counter).gnorms_ave = gnorms_ave_sg;
-                    results_sg(counter).gnorms_std = gnorms_std_sg;
-                    results_sg(counter).tss_ave = tss_ave_sg;
-                    results_sg(counter).tss_std = tss_std_sg;
+%                     results_sg(counter).M = M;
+%                     results_sg(counter).bszg = bszg;
+%                     results_sg(counter).bszH = bszH;
+%                     results_sg(counter).lam = lam;
+%                     results_sg(counter).step = stepsize_toggle;
+%                     results_sg(counter).step_param = stepsize_param;
+%                     results_sg(counter).fs_ave = fs_ave_sg;
+%                     results_sg(counter).fs_std = fs_std_sg;
+%                     results_sg(counter).gnorms_ave = gnorms_ave_sg;
+%                     results_sg(counter).gnorms_std = gnorms_std_sg;
+%                     results_sg(counter).tss_ave = tss_ave_sg;
+%                     results_sg(counter).tss_std = tss_std_sg;
+%                     results_sg(counter).ws_ave_sg = ws_ave_sg;
                     
-                    results_n(counter).M = M;
-                    results_n(counter).bszg = bszg;
-                    results_n(counter).bszH = bszH;
-                    results_n(counter).lam = lam;
-                    results_n(counter).step = stepsize_toggle;
-                    results_n(counter).step_param = stepsize_param;
-                    results_n(counter).fs_ave = fs_ave_n;
-                    results_n(counter).fs_std = fs_std_n;
-                    results_n(counter).gnorms_ave = gnorms_ave_n;
-                    results_n(counter).gnorms_std = gnorms_std_n;
-                    results_n(counter).tss_ave = tss_ave_n;
-                    results_n(counter).tss_std = tss_std_n;
+%                     results_n(counter).M = M;
+%                     results_n(counter).bszg = bszg;
+%                     results_n(counter).bszH = bszH;
+%                     results_n(counter).lam = lam;
+%                     results_n(counter).step = stepsize_toggle;
+%                     results_n(counter).step_param = stepsize_param;
+%                     results_n(counter).fs_ave = fs_ave_n;
+%                     results_n(counter).fs_std = fs_std_n;
+%                     results_n(counter).gnorms_ave = gnorms_ave_n;
+%                     results_n(counter).gnorms_std = gnorms_std_n;
+%                     results_n(counter).tss_ave = tss_ave_n;
+%                     results_n(counter).tss_std = tss_std_n;
+%                     results_n(counter).ws_ave_n = ws_ave_n;
                     
                     results_slbfgs(counter).M = M;
                     results_slbfgs(counter).bszg = bszg;
@@ -146,6 +144,7 @@ for i = 1:length(bszg_list)
                     results_slbfgs(counter).gnorms_std = gnorms_std_slbfgs;
                     results_slbfgs(counter).tss_ave = tss_ave_slbfgs;
                     results_slbfgs(counter).tss_std = tss_std_slbfgs;
+                    results_slbfgs(counter).ws_ave_slbfgs = ws_ave_slbfgs;
                     
                     counter = counter+1;
                 end
@@ -154,6 +153,270 @@ for i = 1:length(bszg_list)
     end
 end
 
-save('P4_sg.mat', 'results_sg');
-save('P4_n.mat','results_n');
-save('P4_slbfgs.mat','results_slbfgs');
+
+%% plots
+load('P4_sg3.mat');load('P4_n3.mat');
+fsz = 16;
+% different M
+bszH = [256];
+bszg = [64];
+M = M_list;
+stepsize = struct('line_search',[1]);
+inds = find_inds_slbfgs(results_slbfgs, M, bszH, bszg, stepsize);
+results_plot = results_slbfgs(inds);
+figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('M = %d',results_plot(i).M);
+    ks = 1:size(results_plot(i).fs_ave,2);
+    plot(ks,results_plot(i).fs_ave,'LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('Iteration','Fontsize',fsz)
+ylabel('f','Fontsize',fsz)
+lgd = legend;
+lgd.FontSize = fsz;
+xlim([1,1000]);
+
+figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('M = %d',results_plot(i).M);
+    ks = 1:size(results_plot(i).gnorms_ave,2);
+    plot(ks,results_plot(i).gnorms_ave,'LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('Iteration','Fontsize',fsz)
+ylabel('|| stoch grad f||','Fontsize',fsz);
+lgd = legend;
+lgd.FontSize = fsz;
+
+a=figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('M = %d',results_plot(i).M);
+    plot(results_plot(i).M,sum(results_plot(i).tss_ave),'bo','LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('M','Fontsize',fsz)
+ylabel('runtime (s)','Fontsize',fsz)
+axis([0,11,0.05,0.085])
+
+% different g batch size
+bszH = [256];
+bszg = bszg_list;
+M = [1];
+stepsize = struct('line_search',[1]);
+inds = find_inds_slbfgs(results_slbfgs, M, bszH, bszg, stepsize);
+results_plot = results_slbfgs(inds);
+figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('S_g = %d',results_plot(i).bszg);
+    ks = 1:size(results_plot(i).fs_ave,2);
+    plot(results_plot(i).fs_ave,'LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('Iteration','Fontsize',fsz)
+ylabel('f','Fontsize',fsz)
+lgd = legend;
+lgd.FontSize = fsz;
+xlim([1,1000]);
+
+figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('S_g = %d',results_plot(i).bszg);
+    ks = 1:size(results_plot(i).gnorms_ave,2);
+    plot(ks,results_plot(i).gnorms_ave,'LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('Iteration','Fontsize',fsz)
+ylabel('|| stoch grad f||','Fontsize',fsz);
+lgd = legend;
+lgd.FontSize = fsz;
+xlim([1,1000]);
+
+a=figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('S_g = %d',results_plot(i).bszg);
+    plot(results_plot(i).bszg,sum(results_plot(i).tss_ave),'bo','LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('S_g','Fontsize',fsz)
+ylabel('runtime (s)','Fontsize',fsz)
+axis([20,140,0.065,0.09])
+
+% different H batch size
+bszH = bszH_list;
+bszg = [64];
+M = [1];
+stepsize = struct('line_search',[1]);
+inds = find_inds_slbfgs(results_slbfgs, M, bszH, bszg, stepsize);
+results_plot = results_slbfgs(inds);
+figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('S_H = %d',results_plot(i).bszH);
+    ks = 1:size(results_plot(i).fs_ave,2);
+    plot(ks,results_plot(i).fs_ave,'LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('Iteration','Fontsize',fsz)
+ylabel('f','Fontsize',fsz)
+lgd = legend;
+lgd.FontSize = fsz;
+xlim([1,1000]);
+
+figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('S_H = %d',results_plot(i).bszH);
+    ks = 1:size(results_plot(i).gnorms_ave,2);
+    plot(ks,results_plot(i).gnorms_ave,'LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('Iteration','Fontsize',fsz)
+ylabel('|| stoch grad f||','Fontsize',fsz);
+lgd = legend;
+lgd.FontSize = fsz;
+xlim([1,1000]);
+
+a=figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('S_H = %d',results_plot(i).bszH);
+    plot(results_plot(i).bszH,sum(results_plot(i).tss_ave),'bo','LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('S_H','Fontsize',fsz)
+ylabel('runtime (s)','Fontsize',fsz)
+axis([100,540,0.06,0.12])
+
+stepsize_strategies = struct('fixed',[0.5,0.1,0.01],'decay',[0.5,1,2],'line_search',[1]);
+
+% different stepsize strategy
+bszH = [256];
+bszg = [64];
+M = [1];
+stepsize = stepsize_strategies;
+inds = find_inds_slbfgs(results_slbfgs, M, bszH, bszg, stepsize);
+results_plot = results_slbfgs(inds);
+figure;
+lgd_names = {'\alpha=0.5','\alpha=0.1','\alpha=0.01','\gamma=0.5','\gamma=1','\gamma=2', 'line search'};
+for i = 1:size(results_plot,2)
+    legend_name = lgd_names{i};
+    ks = 1:size(results_plot(i).fs_ave,2);
+    plot(ks,results_plot(i).fs_ave,'LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('Iteration','Fontsize',fsz)
+ylabel('f','Fontsize',fsz)
+lgd = legend;
+xlim([1,1000]);
+
+figure;
+for i = 1:size(results_plot,2)
+    legend_name = lgd_names{i};
+    ks = 1:size(results_plot(i).gnorms_ave,2);
+    plot(ks,results_plot(i).gnorms_ave,'LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('Iteration','Fontsize',fsz)
+ylabel('|| stoch grad f||','Fontsize',fsz);
+lgd = legend;
+xlim([1,1000]);
+
+a=figure;
+for i = 1:size(results_plot,2)
+    legend_name = lgd_names{i};
+    plot(i,sum(results_plot(i).tss_ave),'bo','LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xticks([1,2,3,4,5,6,7])
+xticklabels(lgd_names)
+ylabel('runtime (s)','Fontsize',fsz)
+xlim([0,8])
+% a = get(gca,'XTickLabel');
+% set(gca,'XTickLabel',a,'FontName','Times','fontsize',fsz)
+
+% compare with SG and SINewton
+bszH = [256];
+bszg = [64];
+M = [1];
+stepsize = struct('line_search',[1]);
+inds = find_inds_slbfgs(results_slbfgs, M, bszH, bszg, stepsize);
+results_plot_sl = results_slbfgs(inds);
+results_plot_sg = results_sg(find_inds_sg(results_sg,bszg,[0.01],stepsize));
+results_plot_si = results_n(find_inds_si(results_n,bszg,[0.01],stepsize));
+figure;
+plot(1:1001,results_plot_sl(1).fs_ave,'LineWidth',2,'DisplayName','SLBFGS');
+hold on;
+plot(1:1001,results_plot_sg(1).fs_ave,'LineWidth',2,'DisplayName','SG');
+plot(1:1001,results_plot_si(1).fs_ave,'LineWidth',2,'DisplayName','SINewton');
+xlabel('Iteration''Fontsize',fsz)
+ylabel('f''Fontsize',fsz)
+legend;
+
+figure;
+plot(1:1000,results_plot_sl(1).gnorms_ave,'LineWidth',2,'DisplayName','SLBFGS');
+hold on;
+plot(1:1000,results_plot_sg(1).gnorms_ave,'LineWidth',2,'DisplayName','SG');
+plot(1:1000,results_plot_si(1).gnorms_ave,'LineWidth',2,'DisplayName','SINewton');
+xlabel('Iteration','Fontsize',fsz)
+ylabel('|| stoch grad f||','Fontsize',fsz);
+lgd = legend;
+xlim([1,1000]);
+
+a=figure;
+plot(1,sum(results_plot_sl(i).tss_ave),'bo','LineWidth',2,'DisplayName','SLBFGS');
+hold on;
+plot(2,sum(results_plot_sg(i).tss_ave),'bo','LineWidth',2,'DisplayName','SG');
+plot(3,sum(results_plot_si(i).tss_ave),'bo','LineWidth',2,'DisplayName','SINewton');
+
+xticks([1,2,3])
+xticklabels({'SLBFGS','SG','SINewton'})
+ylabel('runtime (s)','Fontsize',fsz)
+xlim([0,4])
+
+%% function
+function inds = find_inds_slbfgs(results, M, bszH, bszg, stepsize)
+stepsize_names = fieldnames(stepsize);
+dim = size(results,2);
+inds = [];
+
+for i = 1:dim
+    if ismember(results(i).M, M) && ismember(results(i).bszH, bszH) && ismember(results(i).bszg, bszg)
+        if ismember(results(i).step, stepsize_names)
+            params = getfield(stepsize,results(i).step);
+            if ismember(results(i).step_param, params)
+                inds = [inds,i];
+            end
+        end
+    end
+end
+end
+
+function inds = find_inds_sg(results, bsz, lam, stepsize)
+stepsize_names = fieldnames(stepsize);
+dim = size(results,2);
+inds = [];
+for i = 1:dim
+    if ismember(results(i).bszg, bsz) && ismember(results(i).lam, lam) 
+        if ismember(results(i).step, stepsize_names)
+            params = getfield(stepsize,results(i).step);
+            if ismember(results(i).step_param, params)
+                inds = [inds,i];
+            end
+        end
+    end
+end
+end
+
+function inds = find_inds_si(results, bsz, lam, stepsize)
+stepsize_names = fieldnames(stepsize);
+dim = size(results,2);
+inds = [];
+for i = 1:dim
+    if ismember(results(i).bszg, bsz) && ismember(results(i).lam, lam) 
+        if ismember(results(i).step, stepsize_names)
+            params = getfield(stepsize,results(i).step);
+            if ismember(results(i).step_param, params)
+                inds = [inds,i];
+            end
+        end
+    end
+end
+end

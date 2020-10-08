@@ -1,11 +1,12 @@
-function [a,w,failboo] = linesearch(Ig,w,s,fun)
+function [a,w,failboo] = linesearch(Ig,w,s,fun,gfun)
 failboo = false;
 gam = 0.9; %line search decrease factor
 jmax = ceil(log(1e-14)/log(gam)); % max # of iterations in line search
 eta = 0.5; %in line search
 a = 1;
 f0 = fun(Ig,w);
-aux = eta*(s'*s);
+g = gfun(Ig,w);
+aux = eta*(g'*s);
 for j = 0 : jmax
     wtry = w + a*s;
     f1 = fun(Ig,wtry);

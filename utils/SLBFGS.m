@@ -7,7 +7,7 @@ kmax = 1e3;
 %% choose stepsize decreasing strategy based on toggle
 switch stepsize_toggle
     case 'line_search'
-        stepsize_fun = @(Ig,w,s,k) linesearch(Ig,w,s,fun);
+        stepsize_fun = @(Ig,w,s,k) linesearch(Ig,w,s,fun,gfun);
     case 'decay'
         stepsize_fun = @(Ig,w,s,k) stepsize_decay(Ig,w,s,fun,k,stepsize_param);
     case 'fixed'
@@ -35,7 +35,7 @@ f(1) = fun(E,x);
 ts = [];
 
 % first do steepest decend step
-[a,~,~] = stepsize_fun(Ig,x,-g,0);
+[a,~,~] = linesearch(Ig,x,-g,fun,gfun);
 xnew = x - a*g;
 gnew = gfun(Ig,xnew);
 s(:,1) = xnew - x;
@@ -87,5 +87,5 @@ while iter < kmax
         break
     end
 end
-fprintf('S L-BFGS: %d iterations, norm(g) = %d\n',iter,nor);
+% fprintf('S L-BFGS: %d iterations, norm(g) = %d\n',iter,nor);
 end

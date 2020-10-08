@@ -5,7 +5,7 @@ kmax = 1e3; % max epoch limit
 %% choose stepsize decreasing strategy based on toggle
 switch stepsize_toggle
     case 'line_search'
-        stepsize_fun = @(Ig,w,s,k) linesearch(Ig,w,s,fun);
+        stepsize_fun = @(Ig,w,s,k) linesearch(Ig,w,s,fun,gfun);
     case 'decay'
         stepsize_fun = @(Ig,w,s,k) stepsize_decay(Ig,w,s,fun,k,stepsize_param);
     case 'fixed'

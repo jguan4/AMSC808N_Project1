@@ -16,8 +16,8 @@ realizationN = 1000;
 w0 = [-1;-1;1;1];
 Y = (label*ones(1,dim + 1)).*[XX,ones(n,1)];
 
-vec = 5;%0:5;
-bsz_list = 16*2.^vec;
+vec = 0:6;
+bsz_list = 8*2.^vec;
 stepsize_strategies = struct('fixed',[0.5,0.1,0.01],'decay',[0.5,1,2],'line_search',[1]);
 lambdas = [0.001,0.01,0.1];
 
@@ -39,11 +39,13 @@ for i = 1:length(bsz_list)
                 fs = zeros(realizationN,1001);
                 gnorms = zeros(realizationN,1000);
                 tss = zeros(realizationN,1000);
+                ws = zeros(realizationN,4);
                 for ri = 1:realizationN
                     [w,f,gnorm,ts] = SG(fun,gfun,w0,n,bsz,stepsize_toggle,stepsize_param);
                     fs(ri,:) = f';
                     gnorms(ri,:) = gnorm';
                     tss(ri,:) = ts';
+                    ws(ri,:) = w';
                 end
                 fs_ave = mean(fs,1);
                 fs_std = std(fs,1);
@@ -51,6 +53,7 @@ for i = 1:length(bsz_list)
                 gnorms_std = std(gnorms,1);
                 tss_ave = mean(tss,1);
                 tss_std = std(tss,1);
+                ws_ave = mean(ws,1);
                 
                 results(counter).bsz = bsz;
                 results(counter).lam = lam;
@@ -62,6 +65,7 @@ for i = 1:length(bsz_list)
                 results(counter).gnorms_std = gnorms_std;
                 results(counter).tss_ave = tss_ave;
                 results(counter).tss_std = tss_std;
+                results(counter).ws_ave = ws_ave;
                 
                 counter = counter+1;
             end
@@ -69,33 +73,165 @@ for i = 1:length(bsz_list)
     end
 end
 
-save('P2_1.mat','results');
+%% plots
+% different g batch size
+bsz = bsz_list;
+lam = [0.01];
+stepsize = struct('line_search',[1]);
+inds = find_inds_sg(results,bsz, lam, stepsize);
+results_plot = results(inds);
+figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('bsz = %d',results_plot(i).bsz);
+    ks = 1:size(results_plot(i).fs_ave,2);
+    plot(ks,results_plot(i).fs_ave,'LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('Iteration','Fontsize',fsz)
+ylabel('f','Fontsize',fsz)
+lgd = legend;
+lgd.FontSize = fsz;
+xlim([1,1000]);
+grid on
+pbaspect([1.3 1 1])
 
-% fprintf('w = [%d,%d,%d], b = %d\n',w(1),w(2),w(3),w(4));
+figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('bsz = %d',results_plot(i).bsz);
+    ks = 1:size(results_plot(i).gnorms_ave,2);
+    plot(ks,results_plot(i).gnorms_ave,'LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('Iteration','Fontsize',fsz)
+ylabel('|| stoch grad f||','Fontsize',fsz);
+lgd = legend;
+lgd.FontSize = fsz;
+xlim([1,1000]);
+grid on
+pbaspect([1.3 1 1])
 
-% plot_plane(fhandle,XX,w)
-%%
-% fsz = 16;
-% figure(4);
-% hold on;
-% grid;
-% niter = length(f);
-% plot((0:niter-1)',f,'Linewidth',2,'DisplayName',strcat('n=',num2str(bsz)));
-% set(gca,'Fontsize',fsz);
-% xlabel('k','Fontsize',fsz);
-% ylabel('f','Fontsize',fsz);
-% 
-% %%
-% figure(5);
-% hold on;
-% grid;
-% niter = length(gnorm);
-% plot((0:niter-1)',gnorm,'Linewidth',2);
-% set(gca,'Fontsize',fsz);
-% set(gca,'YScale','log');
-% xlabel('k','Fontsize',fsz);
-% ylabel('|| stoch \nabla f||','Fontsize',fsz);
-% 
-% figure(4);
-% legend;
+a=figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('bsz = %d',results_plot(i).bsz);
+    plot(results_plot(i).bsz,sum(results_plot(i).tss_ave),'bo','LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('bsz','Fontsize',fsz)
+ylabel('runtime (s)','Fontsize',fsz)
+xlim([min(bsz_list)-5,max(bsz_list)+5])
+grid on
+pbaspect([1.3 1 1])
 
+% different lambda
+bsz = [64];
+lam = lambdas;
+stepsize = struct('line_search',[1]);
+inds = find_inds_sg(results,bsz, lam, stepsize);
+results_plot = results(inds);
+figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('lam = %d',results_plot(i).lam);
+    ks = 1:size(results_plot(i).fs_ave,2);
+    plot(ks,results_plot(i).fs_ave,'LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('Iteration','Fontsize',fsz)
+ylabel('f','Fontsize',fsz)
+lgd = legend;
+lgd.FontSize = fsz;
+xlim([1,1000]);
+grid on
+pbaspect([1.3 1 1])
+
+figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('lam = %d',results_plot(i).lam);
+    ks = 1:size(results_plot(i).gnorms_ave,2);
+    plot(ks,results_plot(i).gnorms_ave,'LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('Iteration','Fontsize',fsz)
+ylabel('|| stoch grad f||','Fontsize',fsz);
+lgd = legend;
+lgd.FontSize = fsz;
+xlim([1,1000]);
+grid on
+pbaspect([1.3 1 1])
+
+a=figure;
+for i = 1:size(results_plot,2)
+    legend_name = sprintf('lam = %d',results_plot(i).lam);
+    plot(results_plot(i).lam,sum(results_plot(i).tss_ave),'bo','LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('lam','Fontsize',fsz)
+ylabel('runtime (s)','Fontsize',fsz)
+xlim([min(lambdas)-0.1,max(lambdas)+0.1])
+grid on
+pbaspect([1.3 1 1])
+
+% different stepsize
+bsz = [64];
+lam = [0.01];
+stepsize = stepsize_strategies;
+inds = find_inds_sg(results,bsz, lam, stepsize);
+results_plot = results(inds);
+lgd_names = {'\alpha=0.5','\alpha=0.1','\alpha=0.01','\gamma=0.5','\gamma=1','\gamma=2', 'line search'};
+figure;
+for i = 1:size(results_plot,2)
+    legend_name = lgd_names{i};
+    ks = 1:size(results_plot(i).fs_ave,2);
+    plot(ks,results_plot(i).fs_ave,'LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('Iteration','Fontsize',fsz)
+ylabel('f','Fontsize',fsz)
+lgd = legend;
+xlim([1,1000]);
+grid on
+pbaspect([1.3 1 1])
+
+figure;
+for i = 1:size(results_plot,2)
+    legend_name = lgd_names{i};
+    ks = 1:size(results_plot(i).gnorms_ave,2);
+    plot(ks,results_plot(i).gnorms_ave,'LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xlabel('Iteration','Fontsize',fsz)
+ylabel('|| stoch grad f||','Fontsize',fsz);
+lgd = legend;
+xlim([1,1000]);
+grid on
+pbaspect([1.3 1 1])
+
+a=figure;
+for i = 1:size(results_plot,2)
+    legend_name = lgd_names{i};
+    plot(i,sum(results_plot(i).tss_ave),'bo','LineWidth',2,'DisplayName',legend_name);
+    hold on;
+end
+xticks([1,2,3,4,5,6,7])
+xticklabels(lgd_names)
+ylabel('runtime (s)','Fontsize',fsz)
+xlim([0,8])
+xtickangle(45)
+grid on
+pbaspect([1.3 1 1])
+
+%% function
+function inds = find_inds_sg(results, bsz, lam, stepsize)
+stepsize_names = fieldnames(stepsize);
+dim = size(results,2);
+inds = [];
+for i = 1:dim
+    if ismember(results(i).bsz, bsz) && ismember(results(i).lam, lam) 
+        if ismember(results(i).step, stepsize_names)
+            params = getfield(stepsize,results(i).step);
+            if ismember(results(i).step_param, params)
+                inds = [inds,i];
+            end
+        end
+    end
+end
+end
